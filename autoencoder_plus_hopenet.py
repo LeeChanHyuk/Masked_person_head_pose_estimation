@@ -27,8 +27,8 @@ transform = transforms.ToTensor()
 train_data = dataset_autoencoder_recovery.Pose_300W_LP('/home/leechanhyuk/Downloads/NEW_IMAGE/','/home/leechanhyuk/Downloads/term_project/deep-head-pose-master/code/file_name_list.txt' ,transform,test=0)
 test_data = dataset_autoencoder_recovery.Pose_300W_LP('/home/leechanhyuk/Downloads/NEW_IMAGE/','/home/leechanhyuk/Downloads/term_project/deep-head-pose-master/code/file_name_list_test.txt',transform,test=1)
 
-estimation_train_data = datasets_estimation_model.Pose_300W_LP('/home/leechanhyuk/Downloads/mask1/abc','/home/leechanhyuk/PycharmProjects/tensorflow1/new_file_name_list.txt',transform,test=0)
-estimation_test_data = datasets_estimation_model.Pose_300W_LP('/home/leechanhyuk/Downloads/mask1/abc','/home/leechanhyuk/PycharmProjects/tensorflow1/new_file_name_list.txt',transform,test=1)
+estimation_train_data = datasets_estimation_model.Pose_300W_LP('/home/leechanhyuk/Downloads/mask1/train_masked_dataset/','/home/leechanhyuk/PycharmProjects/tensorflow1/new_file_name_list.txt',transform,test=0)
+estimation_test_data = datasets_estimation_model.Pose_300W_LP('/home/leechanhyuk/Downloads/mask1/test_masked_dataset/','/home/leechanhyuk/PycharmProjects/tensorflow1/new_file_name_list.txt',transform,test=1)
 
 # Create training and test dataloaders
 
@@ -62,6 +62,15 @@ import torch.nn.functional as F
 def get_ignored_params(model):
     # Generator function that yields ignored params.
     b = [model.conv1, model.bn1, model.fc_finetune]
+    for i in range(len(b)):
+        for module_name, module in b[i].named_modules():
+            if 'bn' in module_name:
+                module.eval()
+            for name, param in module.named_parameters():
+                yield param
+def get_ignored_params2(model):
+    # Generator function that yields ignored params.
+    b = [model.conv1, model.bn1]
     for i in range(len(b)):
         for module_name, module in b[i].named_modules():
             if 'bn' in module_name:
@@ -176,7 +185,7 @@ class ConvAutoencoder(nn.Module):
         x=F.relu(self.t_conv7(x))
         x = F.relu(self.conv2(x))
         decoder_output = F.relu(self.conv3(x))
-        x = F.sigmoid(self.conv3(x))
+        x = F.sigmoid(self.conv3(decoder_output))
 
         return x
 
@@ -252,7 +261,9 @@ print(model)
 criterion = nn.BCELoss().cuda(0)
 
 # specify loss function
-optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+optimizer = torch.optim.Adam([{'params': get_ignored_params2(model), 'lr': 0},
+                                  {'params': get_non_ignored_params(model), 'lr': 0.00001}],
+                                   lr = 0.001)
 
 # number of epochs to train the model
 n_epochs = 100
@@ -294,8 +305,8 @@ for epoch in range(1, n_epochs + 1):
     if epoch % 1 == 0:
         print('Taking snapshot...')
         torch.save(model.state_dict(),
-                   'output/snapshots/' + '_epoch_' + str(epoch + 1) + '.pkl')
-model.load_state_dict(torch.load('/home/leechanhyuk/Desktop/weights/Autoencoder/resnet_p1,p2,p3_added/_epoch_101.pkl'))
+                   '/home/leechanhyuk/Desktop/weights/20201012/20201012_autoencoder/' + '_epoch_' + str(epoch + 1) + '.pkl')
+model.load_state_dict(torch.load('/home/leechanhyuk/Desktop/weights/20201012/20201012_autoencoder/_epoch_100.pkl'))
 model.eval()
 hopenet = Hopenet(torchvision.models.resnet.Bottleneck , [3, 4, 6, 3] , 67).cuda(gpu)
 estimation_criterion = nn.CrossEntropyLoss().cuda(gpu)
@@ -365,6 +376,6 @@ for epoch in range(100):
     if epoch % 1 == 0 and epoch < num_epochs:
         print('Taking snapshot...')
         torch.save(hopenet.state_dict(),
-                   '/home/leechanhyuk/Desktop/weights/20201012/' + '_epoch_' + str(epoch + 1) + '.pkl')
+                   '/home/leechanhyuk/Desktop/weights/20201012/20201012_estimation' + '_epoch_' + str(epoch + 1) + '.pkl')
 
 
