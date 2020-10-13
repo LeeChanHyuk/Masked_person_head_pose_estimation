@@ -75,7 +75,7 @@ class Pose_300W_LP():
         if self.test == 0:
             self.filename_lists = get_list_from_filenames(filename_path)
         else:
-            self.filename_lists = get_list_from_filenames('/home/leechanhyuk/Downloads/mask1/abc2/file_name_list_test.txt')
+            self.filename_lists = get_list_from_filenames('/home/leechanhyuk/Downloads/mask1/test_masked_dataset/file_name_list_test.txt')
         self.net = cv2.dnn.readNetFromCaffe('deploy.prototxt', 'res10_300x300_ssd_iter_140000.caffemodel')
 
 
@@ -114,12 +114,12 @@ class Pose_300W_LP():
                 if self.transform is not None:
                     img = self.transform(img)
         if self.test==0:
-            label_image = cv2.imread('/home/leechanhyuk/Downloads/mask1/abc' + '/' + self.filename_lists[index])
+            label_image = cv2.imread('/home/leechanhyuk/Downloads/mask1/train_masked_dataset' + '/' + self.filename_lists[index])
             label_img = cv2.resize(label_image, dsize=(128, 128))
             if self.transform is not None:
                 label_img = self.transform(label_img)
         else:
-            label_image = cv2.imread('/home/leechanhyuk/Downloads/mask1/abc2' + '/' + self.filename_lists[index])
+            label_image = cv2.imread('/home/leechanhyuk/Downloads/mask1/test_masked_dataset' + '/' + self.filename_lists[index])
             print(self.filename_lists[index])
             label_img = cv2.resize(label_image, dsize=(128, 128))
             if self.transform is not None:

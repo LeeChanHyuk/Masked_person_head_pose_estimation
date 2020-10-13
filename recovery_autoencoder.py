@@ -10,14 +10,15 @@ from torch.utils.data.sampler import SubsetRandomSampler
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 import torchsummary as summary
-import datasets_v1
+import dataset_autoencoder_recovery
+import hopenet
 import cv2
 import torchvision
 import math
 from torch.autograd import Variable
 def get_ignored_params(model):
     # Generator function that yields ignored params.
-    b = [model.conv1, model.bn1, model.fc_finetune]
+    b = [model.conv1, model.bn1]
     for i in range(len(b)):
         for module_name, module in b[i].named_modules():
             if 'bn' in module_name:
@@ -47,8 +48,8 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 transform = transforms.ToTensor()
 
 # load the training and test datasets
-train_data = datasets_v1.Pose_300W_LP('/home/leechanhyuk/Downloads/NEW_IMAGE/','/home/leechanhyuk/Downloads/term_project/deep-head-pose-master/code/file_name_list.txt' ,transform,test=0)
-test_data = datasets_v1.Pose_300W_LP('/home/leechanhyuk/Downloads/NEW_IMAGE/','/home/leechanhyuk/Downloads/term_project/deep-head-pose-master/code/file_name_list.txt',transform,test=1)
+train_data = dataset_autoencoder_recovery.Pose_300W_LP('/home/leechanhyuk/Downloads/NEW_IMAGE/','/home/leechanhyuk/Downloads/term_project/deep-head-pose-master/code/file_name_list.txt' ,transform,test=0)
+test_data = dataset_autoencoder_recovery.Pose_300W_LP('/home/leechanhyuk/Downloads/NEW_IMAGE/','/home/leechanhyuk/Downloads/term_project/deep-head-pose-master/code/file_name_list.txt',transform,test=1)
 
 # Create training and test dataloaders
 
@@ -170,22 +171,20 @@ class ConvAutoencoder(nn.Module):
 
 # initialize the NN
 model = ConvAutoencoder(torchvision.models.resnet.Bottleneck, [3, 4, 6, 3]).cuda(0)
-summary.summary(model.cuda(),(3,128,128))
 
 # specify loss function
 criterion = nn.BCELoss().cuda(0)
 
 # specify loss function
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-estimation_optimizer = torch.optim.Adam([{'params': get_ignored_params(hopenet), 'lr': 0},
-                                  {'params': get_non_ignored_params(hopenet), 'lr': 0.00001},
-                                  {'params': get_fc_params(hopenet), 'lr': 0.00005}],
+estimation_optimizer = torch.optim.Adam([{'params': get_ignored_params(model), 'lr': 0},
+                                  {'params': get_non_ignored_params(model), 'lr': 0.00001}],
                                    lr = 0.001)
 
 # number of epochs to train the model
 n_epochs = 100
 
-for epoch in range(1, n_epochs + 1):
+"""for epoch in range(1, n_epochs + 1):
     # monitor training loss
     train_loss = 0.0
 
@@ -220,9 +219,9 @@ for epoch in range(1, n_epochs + 1):
     if epoch % 1 == 0:
         print('Taking snapshot...')
         torch.save(model.state_dict(),
-                   'output/snapshots/' + '_epoch_' + str(epoch + 1) + '.pkl')
-#model.load_state_dict(torch.load('output/snapshots/resnet_epoch_100.pkl'))
-for name , label, data in train_loader:
+                   'output/snapshots/' + '_epoch_' + str(epoch + 1) + '.pkl')"""
+model.load_state_dict(torch.load('/home/leechanhyuk/Desktop/weights/Autoencoder/resnet_p1,p2,p3_added/_epoch_101.pkl'))
+"""for name , label, data in train_loader:
     images = data.cuda()
     outputs = model(images.cuda())
     # output is resized into a batch of images
@@ -237,7 +236,7 @@ for name , label, data in train_loader:
         cv2.imshow('all', a)
         a = a * 255
         a = a.astype('uint8')
-        cv2.imwrite('/home/leechanhyuk/Downloads/NEW_IMAGE_PLEASE/'+name[i],a)
+        cv2.imwrite('/home/leechanhyuk/Downloads/NEW_IMAGE_PLEASE/'+name[i],a)"""
 # obtain one batch of test images
 dataiter = iter(test_loader)
 label,images = dataiter.next()

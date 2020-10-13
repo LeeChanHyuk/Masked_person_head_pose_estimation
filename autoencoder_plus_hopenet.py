@@ -9,7 +9,7 @@ from torch.utils.data.sampler import SubsetRandomSampler
 
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
-import datasets_v1
+import dataset_autoencoder_recovery
 import cv2
 import torchvision
 import math
@@ -24,8 +24,8 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 transform = transforms.ToTensor()
 
 # load the training and test datasets
-train_data = datasets_v1.Pose_300W_LP('/home/leechanhyuk/Downloads/NEW_IMAGE/','/home/leechanhyuk/Downloads/term_project/deep-head-pose-master/code/file_name_list.txt' ,transform,test=0)
-test_data = datasets_v1.Pose_300W_LP('/home/leechanhyuk/Downloads/NEW_IMAGE/','/home/leechanhyuk/Downloads/term_project/deep-head-pose-master/code/file_name_list_test.txt',transform,test=1)
+train_data = dataset_autoencoder_recovery.Pose_300W_LP('/home/leechanhyuk/Downloads/NEW_IMAGE/','/home/leechanhyuk/Downloads/term_project/deep-head-pose-master/code/file_name_list.txt' ,transform,test=0)
+test_data = dataset_autoencoder_recovery.Pose_300W_LP('/home/leechanhyuk/Downloads/NEW_IMAGE/','/home/leechanhyuk/Downloads/term_project/deep-head-pose-master/code/file_name_list_test.txt',transform,test=1)
 
 estimation_train_data = datasets_estimation_model.Pose_300W_LP('/home/leechanhyuk/Downloads/mask1/abc','/home/leechanhyuk/PycharmProjects/tensorflow1/new_file_name_list.txt',transform,test=0)
 estimation_test_data = datasets_estimation_model.Pose_300W_LP('/home/leechanhyuk/Downloads/mask1/abc','/home/leechanhyuk/PycharmProjects/tensorflow1/new_file_name_list.txt',transform,test=1)
@@ -197,12 +197,6 @@ class Hopenet(nn.Module):
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
         self.avgpool = nn.AvgPool2d(4)
-        self.fc_yaw = nn.Linear(512 * block.expansion, num_bins)
-        self.fc_pitch = nn.Linear(512 * block.expansion, num_bins)
-        self.fc_roll = nn.Linear(512 * block.expansion, num_bins)
-
-        # Vestigial layer from previous experiments
-        self.fc_finetune = nn.Linear(512 * block.expansion + 3, 3)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -266,7 +260,7 @@ gpu=0
 
 
 
-"""for epoch in range(1, n_epochs + 1):
+for epoch in range(1, n_epochs + 1):
     # monitor training loss
     train_loss = 0.0
 
@@ -300,8 +294,8 @@ gpu=0
     if epoch % 1 == 0:
         print('Taking snapshot...')
         torch.save(model.state_dict(),
-                   'output/snapshots/' + '_epoch_' + str(epoch + 1) + '.pkl')"""
-model.load_state_dict(torch.load('output/snapshots/resnet_epoch_100.pkl'))
+                   'output/snapshots/' + '_epoch_' + str(epoch + 1) + '.pkl')
+model.load_state_dict(torch.load('/home/leechanhyuk/Desktop/weights/Autoencoder/resnet_p1,p2,p3_added/_epoch_101.pkl'))
 model.eval()
 hopenet = Hopenet(torchvision.models.resnet.Bottleneck , [3, 4, 6, 3] , 67).cuda(gpu)
 estimation_criterion = nn.CrossEntropyLoss().cuda(gpu)
@@ -371,6 +365,6 @@ for epoch in range(100):
     if epoch % 1 == 0 and epoch < num_epochs:
         print('Taking snapshot...')
         torch.save(hopenet.state_dict(),
-                   'output/snapshots/estimation_output/' + '_epoch_' + str(epoch + 1) + '.pkl')
+                   '/home/leechanhyuk/Desktop/weights/20201012/' + '_epoch_' + str(epoch + 1) + '.pkl')
 
 
