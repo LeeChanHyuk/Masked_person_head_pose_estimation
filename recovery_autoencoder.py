@@ -55,7 +55,7 @@ test_data = dataset_autoencoder_recovery.Pose_300W_LP('/home/leechanhyuk/Downloa
 
 num_workers = 0
 # how many samples per batch to load
-batch_size = 20
+batch_size = 64
 
 # prepare data loaders
 train_loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, num_workers=num_workers)
@@ -182,7 +182,7 @@ estimation_optimizer = torch.optim.Adam([{'params': get_ignored_params(model), '
                                    lr = 0.001)
 
 # number of epochs to train the model
-n_epochs = 100
+n_epochs = 200
 
 """for epoch in range(1, n_epochs + 1):
     # monitor training loss
@@ -219,8 +219,8 @@ n_epochs = 100
     if epoch % 1 == 0:
         print('Taking snapshot...')
         torch.save(model.state_dict(),
-                   'output/snapshots/' + '_epoch_' + str(epoch + 1) + '.pkl')"""
-model.load_state_dict(torch.load('/home/leechanhyuk/Desktop/weights/Autoencoder/resnet_p1,p2,p3_added/_epoch_101.pkl'))
+                   '/home/leechanhyuk/Desktop/weights/20201012/recovery/' + '_epoch_' + str(epoch + 1) + '.pkl')"""
+model.load_state_dict(torch.load('/home/leechanhyuk/Desktop/weights/20201012/autoencoder_in_all2/_epoch_200.pkl'))
 """for name , label, data in train_loader:
     images = data.cuda()
     outputs = model(images.cuda())

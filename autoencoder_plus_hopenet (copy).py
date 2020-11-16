@@ -34,7 +34,7 @@ estimation_test_data = datasets_estimation_model.Pose_300W_LP('/home/leechanhyuk
 
 num_workers = 0
 # how many samples per batch to load
-batch_size = 256
+batch_size = 20
 
 # prepare data loaders
 train_loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, num_workers=num_workers)
@@ -273,12 +273,12 @@ optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 #                                   lr = 0.001)
 
 # number of epochs to train the model
-n_epochs = 200
+n_epochs = 100
 gpu=0
 
 
 
-"""for epoch in range(1, n_epochs + 1):
+for epoch in range(1, n_epochs + 1):
     # monitor training loss
     train_loss = 0.0
 
@@ -312,8 +312,8 @@ gpu=0
     if epoch % 1 == 0:
         print('Taking snapshot...')
         torch.save(model.state_dict(),
-                   '/home/leechanhyuk/Desktop/weights/20201012/autoencoder_in_all2/' + '_epoch_' + str(epoch + 1) + '.pkl')"""
-model.load_state_dict(torch.load('/home/leechanhyuk/Desktop/weights/20201012/autoencoder_in_all/_epoch_100.pkl'))
+                   '/home/leechanhyuk/Desktop/weights/20201012/autoencoder_in_all2/' + '_epoch_' + str(epoch + 1) + '.pkl')
+model.load_state_dict(torch.load('/home/leechanhyuk/Desktop/weights/20201012/autoencoder_in_all2/_epoch_100.pkl'))
 model.eval()
 hopenet = Hopenet(torchvision.models.resnet.Bottleneck , [3, 4, 6, 3] , 67).cuda(gpu)
 estimation_criterion = nn.CrossEntropyLoss().cuda(gpu)
@@ -330,7 +330,7 @@ num_epochs=100
 for epoch in range(100):
     for i, (images, labels, cont_labels, name) in enumerate(train_loader_no_mask):
         images = images.cuda()
-        output = model(images.cuda())
+        output = model(images)
 
 
         # use detach when it's an output that requires_grad
@@ -383,6 +383,6 @@ for epoch in range(100):
     if epoch % 1 == 0 and epoch < num_epochs:
         print('Taking snapshot...')
         torch.save(hopenet.state_dict(),
-                   '/home/leechanhyuk/Desktop/weights/20201012/20201012_estimation' + '_epoch_' + str(epoch + 1) + '.pkl')
+                   '/home/leechanhyuk/Desktop/weights/20201012/20201012_estimation2/' + '_epoch_' + str(epoch + 1) + '.pkl')
 
 
