@@ -74,6 +74,7 @@ class Pose_300W_LP():
         self.filename_lists = get_list_from_filenames('/home/leechanhyuk/PycharmProjects/tensorflow1/file_name_list.txt')
         self.coordinate_lists = get_list_from_filenames('/home/leechanhyuk/PycharmProjects/tensorflow1/file_coordinate_list.txt')
         self.pose_lists = get_list_from_filenames('/home/leechanhyuk/PycharmProjects/tensorflow1/file_pose_list.txt')
+        self.net = cv2.dnn.readNetFromCaffe('deploy.prototxt', 'res10_300x300_ssd_iter_140000.caffemodel')
 
     def __getitem__(self, index):
         """img = cv2.imread(self.data_dir+'/'+self.filename_lists[index]+'.jpg')

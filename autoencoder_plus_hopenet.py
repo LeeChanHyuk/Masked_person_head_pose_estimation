@@ -34,7 +34,7 @@ estimation_test_data = datasets_estimation_model.Pose_300W_LP('/home/leechanhyuk
 
 num_workers = 0
 # how many samples per batch to load
-batch_size = 256
+batch_size = 20
 
 # prepare data loaders
 train_loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, num_workers=num_workers)

@@ -26,6 +26,11 @@ import datasets, hopenet, utils
 
 from skimage import io
 
+# helper function to un-normalize and display an image
+def imshow(img):
+    img = img / 2 + 0.5  # unnormalize
+    plt.imshow(np.transpose(img, (1, 2, 0)))  # convert from Tensor image
+
 def parse_args():
     """Parse input arguments."""
     parser = argparse.ArgumentParser(description='Head pose estimation using the Hopenet network.')
@@ -235,8 +240,8 @@ if __name__ == '__main__':
 
     print('Loading snapshot.')
     # Load snapshot
-    conv_autoencoder.load_state_dict(torch.load('output/snapshots/resnet_epoch_100.pkl'))
-    model.load_state_dict(torch.load("/home/leechanhyuk/Downloads/term_project/deep-head-pose-master/code/output/snapshots/estimation_output/_epoch_100.pkl"))
+    conv_autoencoder.load_state_dict(torch.load('/home/leechanhyuk/Desktop/weights/20201012/autoencoder_in_all/_epoch_100.pkl'))
+    model.load_state_dict(torch.load("/home/leechanhyuk/Desktop/weights/20201012/20201012_estimation_epoch_100.pkl"))
 
     print('Loading data.')
 
@@ -278,7 +283,7 @@ if __name__ == '__main__':
     # fourcc = cv2.cv.CV_FOURCC(*'MJPG')
     # out = cv2.VideoWriter('output/video/output-%s.avi' % args.output_string, fourcc, 30.0, (width, height))
 
-    txt_out = open('output/video/output-%s.txt' % args.output_string, 'w')
+    txt_out = open('output-%s.txt' % args.output_string, 'w')
 
     frame_num = 1
     count=0
@@ -287,8 +292,9 @@ if __name__ == '__main__':
     transform = transforms.ToTensor()
     while True:
             # get video frame
-            ret, image = capture.read()
-            image = cv2.flip(image,1)
+            #ret, image = capture.read()
+            image = cv2.imread('/home/leechanhyuk/Downloads/mask1/test_masked_dataset/HELEN_2973812613_1_0.jpg')
+            """image = cv2.flip(image,1)
 
             (h, w) = image.shape[:2]
             blob = cv2.dnn.blobFromImage(cv2.resize(image, (300, 300)), 1.0,
@@ -318,34 +324,40 @@ if __name__ == '__main__':
 
                     cv2.rectangle(image, (startX, startY), (endX, endY),
                                   (0, 0, 255), 2)
-                    img = image[startY:endY + 1, startX:endX + 1]
-                    img = cv2.resize(img, dsize=(128,128))
-                    img = transform(img)
-                    img = img.reshape((1,3,128,128))
-                    output = conv_autoencoder(img.cuda())
+                    img = image[startY:endY + 1, startX:endX + 1]"""
+            img = cv2.resize(image, dsize=(128,128))
+            img = transform(img)
+            img = img.reshape((1,3,128,128))
+            output = conv_autoencoder(img.cuda())
+            output1 = output.view(1, 3, 128, 128)
+            # use detach when it's an output that requires_grad
+            output1 = output1.cpu().detach().numpy()
+            fig, axes = plt.subplots(nrows=2, ncols=10, sharex=True, sharey=True, figsize=(24, 4))
+            """for idx in np.arange(1):
+                ax = fig.add_subplot(2, 20 / 2, idx + 1, xticks=[], yticks=[])
+                imshow(output1[idx])
+                plt.show()"""
 
+            # Forward pass
+            yaw, pitch, roll = model(output)
 
-                    # Forward pass
-                    yaw, pitch, roll = model(output)
+            yaw_predicted = nn.Softmax().cuda(gpu)(yaw)
+            pitch_predicted = nn.Softmax().cuda(gpu)(pitch)
+            roll_predicted = nn.Softmax().cuda(gpu)(roll)
+            # Get continuous predictions in degrees.
+            yaw_predicted = torch.sum(yaw_predicted.data * idx_tensor, 1) * 3 - 99
+            pitch_predicted = torch.sum(pitch_predicted.data * idx_tensor, 1) * 3 - 99
+            roll_predicted = torch.sum(roll_predicted.data * idx_tensor, 1) * 3 - 99
 
-                    yaw_predicted = nn.Softmax().cuda(gpu)(yaw)
-                    pitch_predicted = nn.Softmax().cuda(gpu)(pitch)
-                    roll_predicted = nn.Softmax().cuda(gpu)(roll)
-                    # Get continuous predictions in degrees.
-                    yaw_predicted = torch.sum(yaw_predicted.data * idx_tensor, 1) * 3 - 99
-                    pitch_predicted = torch.sum(pitch_predicted.data * idx_tensor, 1) * 3 - 99
-                    roll_predicted = torch.sum(roll_predicted.data * idx_tensor, 1) * 3 - 99
-
-                    # Print new frame with cube and axis
-                    print(str(frame_num) + ' %f %f %f\n' % (yaw_predicted, pitch_predicted, roll_predicted))
-                    txt_out.write(str(frame_num) + ' %f %f %f\n' % (yaw_predicted, pitch_predicted, roll_predicted))
-                    # utils.plot_pose_cube(frame, yaw_predicted, pitch_predicted, roll_predicted, (x_min + x_max) / 2, (y_min + y_max) / 2, size = bbox_width)
-                    utils.draw_axis(image, yaw_predicted, pitch_predicted, roll_predicted, tdx=(startX + endX) / 2,
-                                    tdy=(startY + endY) / 2, size=(endY - startY) / 2)
-                    # Plot expanded bounding box
-                    # cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), (0,255,0), 1)
-                    cv2.imshow("image", image)
-                    cv2.waitKey(1)
+            # Print new frame with cube and axis
+            print(str(frame_num) + ' %f %f %f\n' % (yaw_predicted, pitch_predicted, roll_predicted))
+            txt_out.write(str(frame_num) + ' %f %f %f\n' % (yaw_predicted, pitch_predicted, roll_predicted))
+            # utils.plot_pose_cube(frame, yaw_predicted, pitch_predicted, roll_predicted, (x_min + x_max) / 2, (y_min + y_max) / 2, size = bbox_width)
+            utils.draw_axis(image, yaw_predicted, pitch_predicted, roll_predicted)
+            # Plot expanded bounding box
+            # cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), (0,255,0), 1)
+            cv2.imshow("image", image)
+            cv2.waitKey(1)
 
 
 

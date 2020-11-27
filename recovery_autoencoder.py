@@ -49,7 +49,7 @@ transform = transforms.ToTensor()
 
 # load the training and test datasets
 train_data = dataset_autoencoder_recovery.Pose_300W_LP('/home/leechanhyuk/Downloads/NEW_IMAGE/','/home/leechanhyuk/Downloads/term_project/deep-head-pose-master/code/file_name_list.txt' ,transform,test=0)
-test_data = dataset_autoencoder_recovery.Pose_300W_LP('/home/leechanhyuk/Downloads/NEW_IMAGE/','/home/leechanhyuk/Downloads/term_project/deep-head-pose-master/code/file_name_list.txt',transform,test=1)
+test_data = dataset_autoencoder_recovery.Pose_300W_LP('/home/leechanhyuk/Downloads/file/','/home/leechanhyuk/Downloads/term_project/deep-head-pose-master/code/file_name_list.txt',transform,test=1)
 
 # Create training and test dataloaders
 
@@ -266,6 +266,7 @@ fig, axes = plt.subplots(nrows=2, ncols=10, sharex=True, sharey=True, figsize=(2
 for idx in np.arange(20):
     ax = fig.add_subplot(2, 20 / 2, idx + 1, xticks=[], yticks=[])
     imshow(output[idx])
+
 
 
 # plot the first ten input images and then reconstructed images
